@@ -51,57 +51,58 @@
 
 //typedef unsigned char byte;
 
+#define RRTGEN_VERSION "v.2.0"
+
 typedef struct {
-   unsigned int   eventTime;
-   unsigned int   value;
-   unsigned int   value2;
-} Notification;
+   unsigned int eventTime ;
+   unsigned int value ;
+   unsigned int value2 ;
+} Notification ;
 
 // Coroutines and handlers.
-void         AddAlertMessage(const char messageLetter);
-bool         AddModelInstance(FSM *modelInstance);
-void         alert(const char *message);          // defined in test module
-int          ChronicleTestRun(const char testRunsCsvFile[],
-                              const char sut[], const char machine[],
-                              int testNumber, unsigned int sequenceNumber,
-                              int score, bool passed, const char alerts[]);
-void         DashTrailing(char *str);
-void         EnterCriticalSection(unsigned short *csVar);
-bool         ExtractVersionInformation(char *pathBuffer,
-                                       unsigned char &minFileRev,      // ByRef
-                                       unsigned char &majFileRev,      // ByRef
-                                       unsigned char &minProductRev,   // ByRef
-                                       unsigned char &majProductRev,   // ByRef
-                                       unsigned char &unusedProductRev,// ByRef
-                                       unsigned char &buildNumProductRev);
+void         addAlertMessage( const char messageLetter ) ;
+bool         addModelInstance( FSM *modelInstance ) ;
+void         alert( const char *message ) ;          // defined in test module
+int          chronicleTestRun( const char testRunsCsvFile[],
+                               const char sut[], const char machine[],
+                               int testNumber, unsigned int sequenceNumber,
+                               int score, bool passed, const char alerts[] ) ;
+void         dashTrailing( char *str ) ;
+void         enterCriticalSection( unsigned short *csVar ) ;
+bool         extractVersionInformation( char *pathBuffer,
+                                        unsigned char &minFileRev,      // ByRef
+                                        unsigned char &majFileRev,      // ByRef
+                                        unsigned char &minProductRev,   // ByRef
+                                        unsigned char &majProductRev,   // ByRef
+                                        unsigned char &unusedProductRev,// ByRef
+                                        unsigned char &buildNumProductRev ) ;
                                                                         // ByRef
-char         *GetAlertMessagePtr(const char messageLetter);
-bool         GetTestVersionInfo(unsigned char &minorProductRev,         // ByRef
-                                unsigned char &majorProductRev,         // ByRef
-                                unsigned char &unusedProductRev,        // ByRef
-                                unsigned char &buildNumProductRev);     // ByRef
-unsigned int GetTimeInMs(void);
-int          kbhit(void);
-void         LeaveCriticalSection(unsigned short *csVar);
-void         ModelThread(Fifo *normalQ, Fifo *priorityQ, FSM **pFsmArray,
-                          char *modelName);  // coroutine
-void         NotificationHandler(const Notification &notification);
-void         NotificationScrubber(void);    // coroutine
-void         OutputAlertMessages(void);
-FSM          *RemoveModelInstance(FSM *modelInstance);
-void         RoundtripCounter(void);        // coroutine
-int          RRTGetErrorStatus(void);       // defined in test module
-char         *RRTGetLogfileHeader(void);    // defined in test module
-char         *RRTGetLogfileDirectory(void); // defined in test module
-int          RRTGetSequenceNumber(void);    // defined in test module
-unsigned int RRTGetTime(void);              // defined in test module
-bool         RRTIsTestInProgress(void);     // defined in test module
-void         RRTLog(const char *message);   // defined in test module
-char         *strlwr(char *string);         // missing in Unix string.h
-char         *strupr(char *string);         // missing in Unix string.h
+char         *getAlertMessagePtr( const char messageLetter ) ;
+bool         getTestVersionInfo( unsigned char &minorProductRev,         // ByRef
+                                 unsigned char &majorProductRev,         // ByRef
+                                 unsigned char &unusedProductRev,        // ByRef
+                                 unsigned char &buildNumProductRev ) ;   // ByRef
+unsigned int getTimeInMs( void ) ;
+int          kbhit( void ) ;
+void         leaveCriticalSection( unsigned short *csVar ) ;
+void         modelThread( Fifo *normalQ, Fifo *priorityQ, FSM **pFsmArray,
+                          char *modelName ) ;  // coroutine
+void         notificationHandler( const Notification &notification ) ;
+void         notificationScrubber( void ) ;    // coroutine
+void         outputAlertMessages( void ) ;
+FSM          *removeModelInstance( FSM *modelInstance ) ;
+void         roundtripCounter( void ) ;        // coroutine
+int          RRTGetErrorStatus( void ) ;       // defined in test module
+char         *RRTGetLogfileHeader( void ) ;    // defined in test module
+char         *RRTGetLogfileDirectory( void ) ; // defined in test module
+int          RRTGetSequenceNumber( void ) ;    // defined in test module
+unsigned int RRTGetTime( void ) ;              // defined in test module
+bool         RRTIsTestInProgress( void ) ;     // defined in test module
+void         RRTLog( const char *message ) ;   // defined in test module
+char         *strlwr( char *string ) ;         // missing in Unix string.h
+char         *strupr( char *string ) ;         // missing in Unix string.h
 
-enum
-{
+enum {
    COMMAND_FAILED                             =  -1,
    SUCCESS                                    =   0,
    BUFFER_OVERFLOWED,
@@ -112,50 +113,50 @@ enum
    SEQUENCE_DOT_DAT_FILE_HAS_BAD_FORMAT,
    TEST_ALREADY_IN_PROGRESS,
    TEST_NOT_IN_PROGRESS
-};
+} ;
 
 // Global constants for use by multiple components.
-extern char       alert_list[];
+extern char       alert_list[] ;
 //const int         broadcast                   =   0;
-extern FSM        *broadcast;
-extern FSM        *DEVICE_INTERFACE;
-const char        DEVICE_INTERFACE_NAME[]     = "device interface";
-const unsigned int INVALID_SEQUENCE_NUMBER    = 0xFFFFFFFF;
-const int         MAX_ALERT_MESSAGES          =  10;
-const int         MAX_LOG_RECORD_SIZE         = 160;
-const int         MAX_TEST_DESCRIPTION_LENGTH =  50;
-extern FSM        *MODEL_INTERFACE;
-extern FSM        *RRTGEN_FRAMEWORK;
-const char        RRTGEN_FRAMEWORK_NAME[]     = "RRTGen framework";
-const char        sequenceDotDatFile[]        = "sequence.dat";
+extern FSM        *broadcast ;
+extern FSM        *DEVICE_INTERFACE ;
+const char        DEVICE_INTERFACE_NAME[]     = "device interface" ;
+const unsigned int INVALID_SEQUENCE_NUMBER    = 0xFFFFFFFF ;
+const int         MAX_ALERT_MESSAGES          =  10 ;
+const int         MAX_LOG_RECORD_SIZE         = 160 ;
+const int         MAX_TEST_DESCRIPTION_LENGTH =  50 ;
+extern FSM        *MODEL_INTERFACE ;
+const char        MODEL_INTERFACE_NAME[]      = "model interface" ;
+extern FSM        *RRTGEN_FRAMEWORK ;
+const char        RRTGEN_FRAMEWORK_NAME[]     = "RRTGen framework" ;
+const char        sequenceDotDatFile[]        = "sequence.dat" ;
 
 // Global variables output from the model compiler.
-extern const char REQUIREMENTS_CSV_FILE[];
-extern FSM        *theModel[];
-extern const int  TOTAL_REQ_COUNT;
-extern const char TRANSACTION_LOG_FILE_EXT[];
+extern const char REQUIREMENTS_CSV_FILE[] ;
+extern FSM        *theModel[] ;
+extern unsigned int TOTAL_REQ_COUNT ;
+extern const char TRANSACTION_LOG_FILE_EXT[] ;
 
 // Ring buffer for the interface to the DUT server.
 typedef struct {
-   unsigned short isStale;                     // used by NotificationScrubber
-   unsigned int   eventTime;
+   unsigned short isStale ;                     // used by NotificationScrubber
+   unsigned int   eventTime ;
 
    // From notification by interface to DUT.
-   unsigned int   value;
-   unsigned int   value2;
-} ringBufferElementType;
+   unsigned int   value ;
+   unsigned int   value2 ;
+} ringBufferElementType ;
 
-const int         NUMBER_OF_RING_BUFFER_SLOTS =  40;
+const int         NUMBER_OF_RING_BUFFER_SLOTS =  40 ;
 typedef struct {
-   volatile unsigned int nextWriteIndex;
-   volatile unsigned int currentReadIndex;
-   ringBufferElementType rbuf[NUMBER_OF_RING_BUFFER_SLOTS];
-   bool                  overrunOccurred;
-} notificationFifo;
+   volatile unsigned int nextWriteIndex ;
+   volatile unsigned int currentReadIndex ;
+   ringBufferElementType rbuf[ NUMBER_OF_RING_BUFFER_SLOTS ] ;
+   bool                  overrunOccurred ;
+} notificationFifo ;
 
 // Internal classes.
-class RepeatableRandomTest
-{
+class RepeatableRandomTest {
    // This class establishes the Repeatable Random Test environment for
    // exectuion of a given test run.  The default directory must contain
    // a file named sequential.dat that specifies the directory to log
@@ -167,111 +168,104 @@ class RepeatableRandomTest
    // is not in progress.  The same time reference is used in the log and
    // test files.
 
-   FILE         *f_dotLog;
-   FILE         *f_sequenceDotDat;
-   FILE         *f_dotTst;
+   FILE         *f_dotLog ;
+   FILE         *f_sequenceDotDat ;
+   FILE         *f_dotTst ;
 
-   char         dotLogFile[255]; // ample
-   char         dotTstFile[255]; // ample
-   int          errorStatus;
-   char         fileHeaderStr[MAX_TEST_DESCRIPTION_LENGTH + 26 + 2];
-   char         logfileDirectory[255]; // ample (includes trailing '/')
-   int          logfileNumber;
-   unsigned int startTime;
-   char         testDescription[MAX_TEST_DESCRIPTION_LENGTH + 1]; // with nul
-   bool         testIsInProgress;
+   char         dotLogFile[ 255 ] ; // ample
+   char         dotTstFile[ 255 ] ; // ample
+   int          errorStatus ;
+   char         fileHeaderStr[ MAX_TEST_DESCRIPTION_LENGTH + 26 + 2 ] ;
+   char         logfileDirectory[ 255 ] ; // ample (includes trailing '/')
+   int          logfileNumber ;
+   unsigned int startTime ;
+   char         rrtgenVersion[ 10 ] ; // adequate
+   char         testDescription[ MAX_TEST_DESCRIPTION_LENGTH + 1 ] ; // with nul
+   bool         testIsInProgress ;
 
-   int  TstLog(const char *str);   // writes an entry in the .tst file
+   int tstLog( const char *str ) ;   // writes an entry in the .tst file
 
-   RepeatableRandomTest();         // default CTOR is disallowed
+   RepeatableRandomTest() ;         // default CTOR is disallowed
 
  public:
 
-   RepeatableRandomTest(const char *testDesc)
-   : errorStatus(SUCCESS),
-     logfileNumber(INVALID_SEQUENCE_NUMBER),
-     testIsInProgress(false)
-   {
-      strncpy(testDescription, testDesc, MAX_TEST_DESCRIPTION_LENGTH);
-      testDescription[MAX_TEST_DESCRIPTION_LENGTH] = '\0'; // for safety
+   RepeatableRandomTest( const char *testDesc )
+   : errorStatus( SUCCESS ),
+     rrtgenVersion ( RRTGEN_VERSION ),
+     logfileNumber( INVALID_SEQUENCE_NUMBER ),
+     testIsInProgress( false ) {
+      strncpy( testDescription, testDesc, MAX_TEST_DESCRIPTION_LENGTH ) ;
+      testDescription[ MAX_TEST_DESCRIPTION_LENGTH ] = '\0' ; // for safety
    }
 
-   ~RepeatableRandomTest()
-   {
+   ~RepeatableRandomTest() {
    }
 
-   int  AbortTest(void);
-   int  FinishTest(void);
-   bool IsTestInProgress(void);
-   int  Log(const char *str);
-   int  GetErrorStatus(void) {return errorStatus;}
-   char *GetLogfileHeader(void) {return fileHeaderStr;}
-   char *GetLogfileDirectory(void) {return logfileDirectory;}
-   int  GetSequenceNumber(void) {return logfileNumber;}
+   int  abortTest( void ) ;
+   int  finishTest( void ) ;
+   bool isTestInProgress( void ) ;
+   int  log( const char *str ) ;
+   int  getErrorStatus( void ) { return errorStatus ; }
+   char *getRRTGenVersion( void ) { return rrtgenVersion ; }
+   char *getLogfileHeader( void ) { return fileHeaderStr ; }
+   char *getLogfileDirectory( void ) { return logfileDirectory ; }
+   int  getSequenceNumber( void ) { return logfileNumber ; }
 
-   unsigned int GetTime()
-   {
-      if (testIsInProgress)
-      {
-         return GetTimeInMs() - startTime;
-      }
-      else
-      {
-         return 0;
+   unsigned int getTime() {
+      if ( testIsInProgress ) {
+         return getTimeInMs() - startTime ;
+      } else {
+         return 0 ;
       }
    }
 
-   void SetErrorStatus(int errStatus)
-   {
+   void getErrorStatus( int errStatus ) {
       // We'll just ignore a request to override an existing error.
-      if (errorStatus == SUCCESS)
-      {
-         errorStatus = errStatus;
+      if ( errorStatus == SUCCESS ) {
+         errorStatus = errStatus ;
       }
    }
 
-   int  StartTest(void);
+   int  startTest( void ) ;
 };
 
-class TransactionLog
-{
-   bool bufferHasOverflowed;
-   int  tlBufferSize;
-   char *pTb; // pointer to the next available byte
-   char *tlBuffer;
+class TransactionLog {
+   bool bufferHasOverflowed ;
+   int  tlBufferSize ;
+   char *pTb ; // pointer to the next available byte
+   char *tlBuffer ;
 
  public:
 
-   TransactionLog();
-   ~TransactionLog();
+   TransactionLog() ;
+   ~TransactionLog() ;
 
-   int MessageReceived(char *rMsg, bool fromModel = false);
-   int MessageSent(char *rMsg);
-   int ToFile(void);
+   int messageReceived( char *rMsg, bool fromModel = false ) ;
+   int messageSent( char *rMsg ) ;
+   int toFile( void ) ;
 };
 
-class RequirementsTallyHandler
-{
-   const static int count          = 0xFFFF + 1; // 64K
-   unsigned short   *talliesMet;             // requirement consequent executed
-   unsigned short   *talliesEncountered;     // requirement encountered
+class RequirementsTallyHandler {
+   const static int count = 0xFFFF + 1 ; // 64K
+   unsigned short *talliesMet ;             // requirement consequent executed
+   unsigned short *talliesEncountered ;     // requirement encountered
 
  public:
 
-   RequirementsTallyHandler();
-   ~RequirementsTallyHandler();
+   RequirementsTallyHandler() ;
+   ~RequirementsTallyHandler() ;
 
-   void TallyEncountered(unsigned short requirementId);
-   void TallyMet(unsigned short requirementId);
-   int  ToFile(void);
-   int  ToLog(void);
+   void tallyEncountered( unsigned short requirementId ) ;
+   void tallyMet( unsigned short requirementId ) ;
+   int  toFile( unsigned int totalRequirementsCount ) ;
+   int  toLog( void ) ;
 };
 
-extern RequirementsTallyHandler rth;
+extern RequirementsTallyHandler rth ;
 
-#define _Re(id) rth.TallyEncountered(id)
-#define _Rm(id) rth.TallyMet(id)
-#define _R(id) rth.TallyEncountered(id);rth.TallyMet(id)
+#define _Re(id) rth.tallyEncountered( id )
+#define _Rm(id) rth.tallyMet( id )
+#define _R(id) rth.tallyEncountered( id );rth.tallyMet( id )
 
 #ifdef LOG_STATIC_REQUIREMENTS
 #define _Rs(id) _R(id)

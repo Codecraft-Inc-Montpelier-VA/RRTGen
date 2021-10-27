@@ -45,7 +45,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <math.h>
-#include "EVTTestConstants.h"
+#include "TestConstants.h"
 #include "RRandom.h"
 
 // The following is the largest integer returned from random().
@@ -62,7 +62,7 @@ RRandom::~RRandom()
 {
 }
 
-void RRandom::SetTestNumber( int tn )
+void RRandom::setTestNumber( int tn )
 {
    // We'll start the array of random values using rand.  It isn't as good
    // a random generator, but this allows us to get truly independent random
@@ -82,7 +82,7 @@ void RRandom::SetTestNumber( int tn )
 }
 
 // Returns a random integer between min and max inclusively with resolution res.
-int RRandom::GetIntValue( RandItems id, int minimum, int maximum, int res )
+int RRandom::getIntValue( RandItems id, int minimum, int maximum, int res )
 {
    assert( maximum >= minimum && res > 0 );
 //cout << "PrevValue[" << id << "] = " << PrevValue[ id ] << " -> ";
@@ -109,7 +109,7 @@ return int( floor( ( double( value ) * ( maximum + 1 - minimum )
 }
 
 // Returns a random float between min and max, inclusively, with resolution res.
-float RRandom::GetFloatValue( RandItems id, float minimum, float maximum,
+float RRandom::getFloatValue( RandItems id, float minimum, float maximum,
                               float res )
 {
    assert( maximum >= minimum && res > 0.0 );
@@ -123,11 +123,11 @@ float RRandom::GetFloatValue( RandItems id, float minimum, float maximum,
 }
 
 // Returns 1 if a random percent is less than or equal to amount, 0 otherwise.
-int RRandom::Percent( RandItems id, int amount )
+int RRandom::percent( RandItems id, int amount )
 {
    assert( amount <= 100 && amount >= 0 );
    int value = 0;
-   int temp = GetIntValue( id, 1, 100, 1 );
+   int temp = getIntValue( id, 1, 100, 1 );
    if ( temp <= amount ) value = 1;
 
    return value;

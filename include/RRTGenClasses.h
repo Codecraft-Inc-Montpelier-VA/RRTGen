@@ -42,7 +42,7 @@
 // terms specified in this license.
 
 // This file is automatically included in the model-compiler-generated
-// XXXModel_Insert.h file.
+// xxxModel_Insert.h file.
 //
 
 #pragma once
@@ -51,184 +51,175 @@
 //#define DEBUGGING
 #ifdef DEBUGGING
 #include <iostream>
-using namespace std;
+using namespace std ;
 #endif // def DEBUGGING
 
 #include <string.h>                    // strncpy (for Cygwin)
 
-const char blank = ' ';
+const char blank = ' ' ;
 
 // Pure virtual base class for model components.
 //
 
-class FSM
-{
+class FSM {
    FSM() {}                            // default CTOR not supported
 
  protected:
-   int   theInstance;
-   state currentState;
-   char  name[MAX_NAME_LENGTH + 1];  // with room for nul at end
+   int   theInstance ;
+   state currentState ;
+   char  name[ MAX_NAME_LENGTH + 1 ] ; // with room for nul at end
 
  public:
-    FSM(int instance, state initState, const char *handle)
-     : theInstance(instance), currentState(initState)
-    {
-       strncpy(name, handle, MAX_NAME_LENGTH);
-       name[MAX_NAME_LENGTH] = '\0';  // for safety
+    FSM( int instance, state initState, const char *handle )
+     : theInstance( instance ), currentState( initState ) {
+       strncpy( name, handle, MAX_NAME_LENGTH ) ;
+       name[ MAX_NAME_LENGTH ] = '\0' ;  // for safety
 
        #ifdef DEBUGGING
-       char str[80]; // ample
-       sprintf(str, "<<< CTOR: %s (%i)", GetName(), GetInstance());
-       cout << str << endl;
+       char str[ 80 ] ; // ample
+       sprintf( str, "<<< CTOR: %s (%i)", getName(), getInstance() ) ;
+       cout << str << endl ;
        #endif // def DEBUGGING
     }
-    virtual ~FSM()
-    {
+    virtual ~FSM() {
        #ifdef DEBUGGING
-       char str[80]; // ample
-       sprintf(str, ">>> DTOR: %s (%i)", GetName(), GetInstance());
-       cout << str << endl;
+       char str[ 80 ] ; // ample
+       sprintf( str, ">>> DTOR: %s (%i)", getName(), getInstance() ) ;
+       cout << str << endl ;
        #endif // def DEBUGGING
     }
-    int     GetInstance(void) {return theInstance;}
-    char    *GetName(void) {return name;}
-    virtual void Update(event theEvent, char parm1, char parm2) = 0;
-};
+    int  getInstance( void ) { return theInstance ; }
+    char *getName( void ) { return name ; }
+    virtual void update( event theEvent, long parm1, long parm2 ) = 0 ;
+} ;
 
-class Id
-{
-   char name[MAX_NAME_LENGTH + 1];
-   int  instance;
+class Id {
+   char name[ MAX_NAME_LENGTH + 1 ] ;
+   int  instance ;
 
    Id() {}  // default CTOR not supported
 
  public:
-   Id(const char *toName, int toInstance)
-    : instance(toInstance)
-   {
-      strncpy(name, toName, MAX_NAME_LENGTH);
-      name[MAX_NAME_LENGTH] = '\0';  // for safety
+   Id( const char *toName, int toInstance )
+    : instance( toInstance ) {
+      strncpy( name, toName, MAX_NAME_LENGTH ) ;
+      name[ MAX_NAME_LENGTH ] = '\0' ;  // for safety
    }
    virtual ~Id() {}
 
-   int     GetInstance(void) {return instance;}
-   char    *GetName(void) {return name;}
-};
+   int  getInstance( void ) { return instance ; }
+   char *getName( void ) { return name ; }
+} ;
 
-enum
-{
-   FIFO_SUCCESS                    = 0,
+enum {
+   FIFO_SUCCESS = 0,
    OVERRUN_OCCURRED
-};
+} ;
 
 typedef struct {
-   event             theEvent;
-   FSM               *source;
-   FSM               *destination; // FSM or 0 (broadcast)
-   char              parm1;
-   char              parm2;
-} bufferElementType;
+   event theEvent ;
+   FSM   *source ;
+   FSM   *destination ; // FSM or 0 (broadcast)
+   long  parm1 ;
+   long  parm2 ;
+} bufferElementType ;
 
 // Note that no critical section is necessary, since only the consumer
 // manipulates the read pointer and only the producer manipulates the
 // write pointer.  The queue is empty when the pointers are equal.
 // We use only n - 1 slots so the write pointer can't reach the read
 // pointer "from the back."
-class Fifo
-{
+class Fifo {
  public:
-   Fifo(const char *fifoName)
-   {
-      currentReadIndex = nextWriteIndex = 0;
-      overrunOccurred = false;
-      strncpy(name, fifoName, MAX_NAME_LENGTH - 1);
-      name[MAX_NAME_LENGTH] = '\0'; // for safety
+   Fifo( const char *fifoName ) {
+      currentReadIndex = nextWriteIndex = 0 ;
+      overrunOccurred = false ;
+      strncpy( name, fifoName, MAX_NAME_LENGTH - 1 ) ;
+      name[ MAX_NAME_LENGTH ] = '\0' ; // for safety
    }
 
    ~Fifo() {}
 
-   char *GetName(void) { return name; }
+   char *getName( void ) { return name ; }
 
-   bool IsEmpty(void)
-   {
-      return overrunOccurred ? false : nextWriteIndex == currentReadIndex;
+   bool isEmpty( void ) {
+      return overrunOccurred ? false : nextWriteIndex == currentReadIndex ;
    }
 
-   int PushEvent(event theEvent, char parm1, char parm2,
-                  FSM *sender, FSM *destination)
-   {
-      int rc = FIFO_SUCCESS; // assumed
+   int pushEvent( event theEvent, long parm1, long parm2,
+                  FSM *sender, FSM *destination ) {
+      int rc = FIFO_SUCCESS ; // assumed
 
       // Make sure there is room in the ring buffer for this sample.
-      if (((nextWriteIndex == NUMBER_OF_MODEL_BUFFER_SLOTS - 1)
-          && (currentReadIndex == 0))
-        || (nextWriteIndex + 1 == currentReadIndex)) {
-         overrunOccurred = true;
-         rc = OVERRUN_OCCURRED;
+      if ( ( ( nextWriteIndex == NUMBER_OF_MODEL_BUFFER_SLOTS - 1 )
+          && ( currentReadIndex == 0 ) )
+        || ( nextWriteIndex + 1 == currentReadIndex ) ) {
+         overrunOccurred = true ;
+         rc = OVERRUN_OCCURRED ;
       } else {
          // Insert the event and its envelope in our circular buffer.
-         buf[nextWriteIndex].theEvent    = theEvent;
-         buf[nextWriteIndex].parm1       = parm1;
-         buf[nextWriteIndex].parm2       = parm2;
-         buf[nextWriteIndex].source      = sender;
-         buf[nextWriteIndex].destination = destination;
+         buf[ nextWriteIndex ].theEvent    = theEvent ;
+         buf[ nextWriteIndex ].parm1       = parm1 ;
+         buf[ nextWriteIndex ].parm2       = parm2 ;
+         buf[ nextWriteIndex ].source      = sender ;
+         buf[ nextWriteIndex ].destination = destination ;
 
          // Bump the write index.
-         if (++nextWriteIndex == NUMBER_OF_MODEL_BUFFER_SLOTS) {
-            nextWriteIndex = 0;
+         if ( ++nextWriteIndex == NUMBER_OF_MODEL_BUFFER_SLOTS ) {
+            nextWriteIndex = 0 ;
          }
       }
 
-      return rc;
+      return rc ;
    }
 
-   int PopEvent(event &returnedEvent, char &returnedParm1, char &returnedParm2,
-                 FSM **returnedSender, FSM **returnedDestination)
-   {
-      int rc = FIFO_SUCCESS; // assumed
+   int popEvent( event &returnedEvent, long &returnedParm1, long &returnedParm2,
+                 FSM **returnedSender, FSM **returnedDestination ) {
+      int rc = FIFO_SUCCESS ; // assumed
 
-      if (overrunOccurred) {
-         rc = OVERRUN_OCCURRED;
+      if ( overrunOccurred ) {
+         rc = OVERRUN_OCCURRED ;
       } else {
          // Grab the event and envelope.
-         returnedEvent        = buf[currentReadIndex].theEvent;
-         returnedParm1        = buf[currentReadIndex].parm1;
-         returnedParm2        = buf[currentReadIndex].parm2;
-         *returnedSender      = buf[currentReadIndex].source;
-         *returnedDestination = buf[currentReadIndex].destination;
+         returnedEvent        = buf[ currentReadIndex ].theEvent ;
+         returnedParm1        = buf[ currentReadIndex ].parm1 ;
+         returnedParm2        = buf[ currentReadIndex ].parm2 ;
+         *returnedSender      = buf[ currentReadIndex ].source ;
+         *returnedDestination = buf[ currentReadIndex ].destination ;
 
          // Remove the event.
-         if (currentReadIndex == NUMBER_OF_MODEL_BUFFER_SLOTS - 1) {
-            currentReadIndex = 0;
+         if ( currentReadIndex == NUMBER_OF_MODEL_BUFFER_SLOTS - 1 ) {
+            currentReadIndex = 0 ;
          } else {
-            currentReadIndex++;
+            currentReadIndex++ ;
          }
 
-         rc = FIFO_SUCCESS;
+         rc = FIFO_SUCCESS ;
       }
 
-      return rc;
+      return rc ;
    }
 
  private:
-   unsigned int      nextWriteIndex;
-   unsigned int      currentReadIndex;
-   bufferElementType buf[NUMBER_OF_MODEL_BUFFER_SLOTS];
-   bool              overrunOccurred;
-   char              name[MAX_NAME_LENGTH + 1]; // with room for nul at end
-};
+   unsigned int      nextWriteIndex ;
+   unsigned int      currentReadIndex ;
+   bufferElementType buf[ NUMBER_OF_MODEL_BUFFER_SLOTS ] ;
+   bool              overrunOccurred ;
+   char              name[ MAX_NAME_LENGTH + 1 ] ; // with room for nul at end
+} ;
 
 // Function prototypes.
-char  *EventText(event theEvent);
-void  SendEvent(event theEvent, char parm1 = ' ', char parm2 = ' ',
-                 FSM *to = 0, FSM *from = 0);
-void  SendEventToId(event theEvent, char parm1 = ' ', char parm2 = ' ',
-                     Id *to = 0, FSM *from = 0);
-void  SendPriorityEvent(event theEvent, char parm1 = ' ', char parm2 = ' ');
-void  SendDelayedEvent(int msToWait, event theEvent, char parm1, char parm2,
-                        FSM *to, FSM *from, bool *continuing);
-void  SendDelayedEventToId(int msToWait, event theEvent, char parm1,
-                            char parm2, Id *to, FSM *from, bool *continuing);
-char  *StateText(state theState);
+char  *eventText( event theEvent ) ;
+void  sendEvent( event theEvent, long parm1 = ' ', long parm2 = ' ',
+                 FSM *to = 0, FSM *from = 0 ) ;
+void  sendEventToId( event theEvent, long parm1 = ' ', long parm2 = ' ',
+                     Id *to = 0, FSM *from = 0 ) ;
+void  sendPriorityEvent( event theEvent, long parm1 = ' ', long parm2 = ' ' ) ;
+void  sendDelayedEvent( int msToWait, event theEvent, long parm1, long parm2,
+                        FSM *to, FSM *from, 
+                        bool *continuing, bool *canceling = NULL ) ;
+void  sendDelayedEventToId( int msToWait, event theEvent, long parm1,
+                            long parm2, Id *to, FSM *from, 
+                            bool *continuing, bool *canceling = NULL ) ;
+char  *stateText( state theState ) ;
 
