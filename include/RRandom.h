@@ -58,14 +58,14 @@ class RRandom
 	static void setTestNumber( int tn );
 
 	// Generates a random integer between min and max with resolution res.
-	int getIntValue( RandItems id, int min, int max, int res = 1 );
+	int getIntValue( randItems id, int min, int max, int res = 1 );
 
 	// Generates a random float >= min and <= max with resolution res.
-	float getFloatValue( RandItems ID, float min, float max, float res = 1.0 );
+	float getFloatValue( randItems ID, float min, float max, float res = 1.0 );
 
 	// amount is a percent between 0 and 100.  Returns 1 if a random percentage
 	// is less than or equal to amount.
-	int percent( RandItems id, int amount );
+	int percent( randItems id, int amount );
 
  private:
 

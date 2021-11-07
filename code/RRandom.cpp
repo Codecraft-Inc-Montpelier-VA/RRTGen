@@ -82,7 +82,7 @@ void RRandom::setTestNumber( int tn )
 }
 
 // Returns a random integer between min and max inclusively with resolution res.
-int RRandom::getIntValue( RandItems id, int minimum, int maximum, int res )
+int RRandom::getIntValue( randItems id, int minimum, int maximum, int res )
 {
    assert( maximum >= minimum && res > 0 );
 //cout << "PrevValue[" << id << "] = " << PrevValue[ id ] << " -> ";
@@ -109,7 +109,7 @@ return int( floor( ( double( value ) * ( maximum + 1 - minimum )
 }
 
 // Returns a random float between min and max, inclusively, with resolution res.
-float RRandom::getFloatValue( RandItems id, float minimum, float maximum,
+float RRandom::getFloatValue( randItems id, float minimum, float maximum,
                               float res )
 {
    assert( maximum >= minimum && res > 0.0 );
@@ -123,7 +123,7 @@ float RRandom::getFloatValue( RandItems id, float minimum, float maximum,
 }
 
 // Returns 1 if a random percent is less than or equal to amount, 0 otherwise.
-int RRandom::percent( RandItems id, int amount )
+int RRandom::percent( randItems id, int amount )
 {
    assert( amount <= 100 && amount >= 0 );
    int value = 0;

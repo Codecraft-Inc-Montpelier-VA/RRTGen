@@ -139,6 +139,7 @@ void addAlertMessage( const char messageLetter ) {
       // the test presentation component. We check here to see if this alert
       // has already been reported since the last strip chart line was
       // printed; if it has already been reported, we'll just skip it now.
+
       if ( pMessage == alertA && alertIssued % 2 ) {
          alertIssued *= 2 ;
       } else if ( pMessage == alertB && alertIssued % 3 ) {
@@ -177,6 +178,8 @@ void addAlertMessage( const char messageLetter ) {
          alertIssued *= 61 ;
       } else if ( pMessage == alertS && alertIssued % 67 ) {
          alertIssued *= 67 ;
+      } else if ( pMessage == alertT && alertIssued % 71 ) {
+         alertIssued *= 71 ;
       }
 #if 0
      //     :      :     :     :   `
@@ -552,6 +555,10 @@ char *getAlertMessagePtr( const char messageLetter ) {
 
       case 'S':
          pStr = (char *)alertS ;
+         break ;
+
+      case 'T':
+         pStr = (char *)alertT ;
          break ;
 
       default:
@@ -1074,6 +1081,8 @@ void outputAlertMessages( void ) {
             c = 'R' ;
          } else if ( alertMessages[i] == alertS ) {
             c = 'S' ;
+         } else if ( alertMessages[i] == alertT ) {
+            c = 'T' ;
          } else {
             c = 'Z';
          }
