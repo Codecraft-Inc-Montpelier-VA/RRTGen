@@ -51,7 +51,7 @@
 
 //typedef unsigned char byte;
 
-#define RRTGEN_VERSION "v.2.0"
+#define RRTGEN_VERSION "v.3.0"
 
 typedef struct {
    unsigned int eventTime ;
@@ -99,6 +99,7 @@ int          RRTGetSequenceNumber( void ) ;    // defined in test module
 unsigned int RRTGetTime( void ) ;              // defined in test module
 bool         RRTIsTestInProgress( void ) ;     // defined in test module
 void         RRTLog( const char *message ) ;   // defined in test module
+void         RRTLogDebug( const char *message ) ; // defined in test module
 char         *strlwr( char *string ) ;         // missing in Unix string.h
 char         *strupr( char *string ) ;         // missing in Unix string.h
 
@@ -123,7 +124,7 @@ extern FSM        *DEVICE_INTERFACE ;
 const char        DEVICE_INTERFACE_NAME[]     = "device interface" ;
 const unsigned int INVALID_SEQUENCE_NUMBER    = 0xFFFFFFFF ;
 const int         MAX_ALERT_MESSAGES          =  10 ;
-const int         MAX_LOG_RECORD_SIZE         = 160 ;
+const int         MAX_LOG_RECORD_SIZE         = 320 /*160*/ ;
 const int         MAX_TEST_DESCRIPTION_LENGTH =  50 ;
 extern FSM        *MODEL_INTERFACE ;
 const char        MODEL_INTERFACE_NAME[]      = "model interface" ;
@@ -205,6 +206,7 @@ class RepeatableRandomTest {
    int  finishTest( void ) ;
    bool isTestInProgress( void ) ;
    int  log( const char *str ) ;
+   int  logDebug( const char *str ) ;
    int  getErrorStatus( void ) { return errorStatus ; }
    char *getRRTGenVersion( void ) { return rrtgenVersion ; }
    char *getLogfileHeader( void ) { return fileHeaderStr ; }
@@ -234,15 +236,18 @@ class TransactionLog {
    int  tlBufferSize ;
    char *pTb ; // pointer to the next available byte
    char *tlBuffer ;
+   int  extraSpace ; // to accomodate indicating error outcomes
 
  public:
 
    TransactionLog() ;
    ~TransactionLog() ;
 
-   int messageReceived( char *rMsg, bool fromModel = false ) ;
-   int messageSent( char *rMsg ) ;
-   int toFile( void ) ;
+   void addExtraSpace( int extraSpace ) ;
+   int  messageReceived( char *rMsg, bool fromDebug = false, 
+                         const char *oMsg = ""  ) ;
+   int  messageSent( char *rMsg ) ;
+   int  toFile( int testNumber, const char logFileHeader[] ) ;
 };
 
 class RequirementsTallyHandler {

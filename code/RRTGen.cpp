@@ -85,6 +85,8 @@ int               alertMessageIndex ;
 char              *alertMessages[ MAX_ALERT_MESSAGES ] ;
 FSM               *broadcast = 0 ;
 bool              configuring ;         // test is in configuration phase
+unsigned int      mostRecentResponseTime = 0 ;
+unsigned int      mostRecentCommandTime = 0 ;
 unsigned int      TOTAL_REQ_COUNT = 0 ; // updated in Gen_Commands_Model::AVTModel_1200
 Fifo              theEventQ( "theEventQ" ) ;
 Fifo              theEventSelfDirectedQ( "theEventSelfDirectedQ" ) ;
@@ -104,7 +106,7 @@ Fifo *pModelNormalQueue     = &theEventQ ;          // defensively; actual value
 Fifo *pModelPriorityQueue   = &theEventSelfDirectedQ ; //  are set in ModelThread
 FSM  *RRTGEN_FRAMEWORK      = (FSM *)0x43434343 ;   // another unique value
 FSM  *sender                = 0 ;                   //
-/// 
+ 
 ////////////////////////////////////////////////////////////////////////////////
 //
 // addAlertMessage
@@ -331,7 +333,9 @@ void doSendDelayedEvent( int msToWait, event theEvent, long parm1, long parm2,
    // We'll wait the requested time and then queue the event (without checking)
    // in the normal queue.
    waitEx( msToWait, continuing, canceling ) ;
-   sendEvent( theEvent, parm1, parm2, to, from ) ;
+   if ( canceling == NULL || *canceling == false ) {
+      sendEvent( theEvent, parm1, parm2, to, from ) ;
+   }
 }
 
 void doSendDelayedEventToId( int msToWait, event theEvent, long parm1,
@@ -340,7 +344,9 @@ void doSendDelayedEventToId( int msToWait, event theEvent, long parm1,
    // We'll wait the requested time and then queue the event (without checking)
    // in the normal queue.
    waitEx( msToWait, continuing, canceling ) ;
-   sendEventToId( theEvent, parm1, parm2, to, from ) ;
+   if ( canceling == NULL || *canceling == false ) {
+      sendEventToId( theEvent, parm1, parm2, to, from ) ;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,7 +746,7 @@ void modelThread( Fifo *normalQ, Fifo *priorityQ, FSM **pFsmArray,
                 sprintf( str, " >>> SD event '%s(%ld,%ld)' sent to '%s' "
                          "(instance %i).", eventText( theEvent ), parm1, parm2,
                          destName, destInstance ) ;
-                //cout << str << endl;
+                cout << str << endl;
                 RRTLog( str ) ;
                }
                #endif // defined(SHOW_EVENT_ENVELOPE)
@@ -811,7 +817,7 @@ void modelThread( Fifo *normalQ, Fifo *priorityQ, FSM **pFsmArray,
                                  parm1, parm2, destName, destInstance,
                                  sendName, sendInstance ) ;
                      }
-                     //cout << str << endl;
+                     cout << str << endl;
                      RRTLog( str ) ;
                   }
                   #endif // defined(SHOW_EVENT_ENVELOPE)
@@ -883,7 +889,7 @@ void modelThread( Fifo *normalQ, Fifo *priorityQ, FSM **pFsmArray,
                               " (%i) from '%s' (%i).", pet, parm1, parm2,
                               destName, destInstance, sendName, sendInstance ) ;
                   }
-                  //cout << str << endl ;
+                  cout << str << endl ;
                   RRTLog( str ) ;
                }
                #endif // defined(SHOW_EVENT_ENVELOPE)
@@ -1285,6 +1291,26 @@ int RepeatableRandomTest::log( const char *str ) {
    }
 
    return rc ;
+}
+
+//////////////////////////////////// Method ////////////////////////////////////
+//
+// RepeatableRandomTest::logDebug
+//
+// This is the implementation of the logDebug method of the RepeatableRandomTest
+// class.
+// 
+// The debug message is written to the .tst file.
+//
+// The implementation expects an input string without trailing newline char.
+// Trailing newline char is added here.
+//
+// The maximum allowed size of the input log string is 160 bytes, without nl.
+//
+
+int RepeatableRandomTest::logDebug( const char *str ) {
+   
+   return tstLog( str ) ;
 }
 
 //////////////////////////////////// Method ////////////////////////////////////
@@ -1951,7 +1977,7 @@ void sendPriorityEvent( event theEvent, long parm1, long parm2 ) {
 // The continuing parameter is the address of a boolean that indicates if this
 // test is still ongoing while waiting for the delayed event.
 //
-// Note: all seven parameters must be specified.
+// Note: all eight parameters must be specified.
 //
 
 void sendDelayedEvent( int msToWait, event theEvent, long parm1, long parm2,
@@ -2114,6 +2140,7 @@ TransactionLog::TransactionLog()
    tlBuffer = new char[ tlBufferSize ] ;
    pTb      = tlBuffer ;
    memset( tlBuffer, 0x00, tlBufferSize * sizeof( char ) ) ;
+   extraSpace = 0 ;
 }
 
 ///////////////////////////////////// DTOR /////////////////////////////////////
@@ -2129,25 +2156,85 @@ TransactionLog::~TransactionLog() {
 
 //////////////////////////////////// Method ////////////////////////////////////
 //
+// TransactionLog::addExtraSpace
+//
+// This is the implementation of the addExtraSpace method of the
+// TransactionLog class.
+//
+// The extraSpace amount is included between the test time and "   <-- " string
+// in order to allow including an outcome indicator on responses.
+// 
+// For example:
+//  
+//    161122 --> 0,13,1,0
+//    165950   <-- -2, 1, 1
+// 
+// allows inclusion of a CRC error indication ("O3a"), with extraSpace set to 4:
+// 
+//    161122     --> 0,13,1,0
+//    165950 O3a   <-- -2, 1, 1
+//
+
+void TransactionLog::addExtraSpace( int eSpace ) {
+   extraSpace = eSpace ;
+}
+
+//////////////////////////////////// Method ////////////////////////////////////
+//
 // TransactionLog::messageReceived
 //
 // This is the implementation of the messageReceived method of the
 // TransactionLog class.
+// 
+// Optional parameters may be used to add an outcome indication to received
+// messages to reflect errors. Consider the following taxonomy of 
+// command / response outcomes:
+// 
+//    1. command executed successfully                              ("O1")
+//    2. response reported a command error                            
+//       a. invalid command                                         ("O2a")
+//       b. invalid length                                          ("O2b")
+//       c. processing error                                        ("O2c")
+//       d. invalid parameter                                       ("O2d")
+//       e. functional error                                        ("O2e")
+//    3. response reported a functional error                         
+//       a. CRC error                                               ("O3a")
+//       b. timeout                                                 ("O3b")
+//    4. command execution failed                                   
+//       a. no response                                             ("O4a")
+//       b. response had bad protocol syntax                        ("O4b")
+//       c. response contained wrong number of data fields          ("O4c")
+//       d. response data field contained wrong data type / value   ("O4d")
+//    5. spurious response received (without a command)             ("O5")
 //
-// The optional boolean indicates whether the message is from the model
-// (rather than from the device under test); if the message is from the model,
-// the string used for visual distinction contains "<M-" rather than "<--".
+// An oMsg string may, for example, be used to indicate that the device under 
+// test is reporting an invalid command error ("O2a") or that the RRTGen test 
+// is indicating that the no response was received from the device under 
+// test ("O4a"). The default value for oMsg is five spaces, the suggested 
+// value for the nominal case where the command executed successfully ("O1").
 //
-// The input message should not include a nl char at the end of the message;
-// it is added here.
+// Prior to calling messageReceived with an oMsg, the extraSpace member 
+// variable should be set, using addExtraSpace, to the longest outcome 
+// string size, plus 1, for consistency of presentation with the messageSent 
+// and messageReceived entries in the transaction log.
+// 
+// The optional boolean indicates whether the message is from the debug port
+// (rather than from the device under test); if the message is from debug,
+// the string used for visual distinction contains "<D-" rather than "<--".
+//
+// The input message in rMsg should not include a nl char at the end of the 
+// message; it is added here.
 //
 // The message is prepended with the test time (in ms) and a "   <-- " string
-// for visual distinction.
+// for visual distinction. In the case of reporting an error, say a CRC error,
+// the prepended string might be "O3a   <-- ", thus producing the logged string,
+// "165950 O3a   <-- -2, 1, 1".
 //
-// The input rMsg length should not exceed MAX_LOG_RECORD_SIZE characters.
+// The input rMsg + oMsg length should not exceed MAX_LOG_RECORD_SIZE characters.
 //
 
-int TransactionLog::messageReceived( char *rMsg, bool fromModel ) {
+int TransactionLog::messageReceived( char *rMsg, bool fromDebug, const char *oMsg ) {
+
    int rc = SUCCESS ; // optimistically
 
    if ( !bufferHasOverflowed ) {
@@ -2155,10 +2242,21 @@ int TransactionLog::messageReceived( char *rMsg, bool fromModel ) {
          // We'll limit the log record size.
          rMsg[ MAX_LOG_RECORD_SIZE ] = '\0' ;
       }
-      // Including time + "   <-- " + nl + nul.
-      char strWithTimeAndNl[ MAX_LOG_RECORD_SIZE + 6 + 7 + 1 + 1 ] ;
-      sprintf( strWithTimeAndNl, "%6i   <%c- %s\n", RRTGetTime(),
-               fromModel ? 'M' : '-', rMsg );
+      if ( strlen( oMsg ) > extraSpace ) {
+         // We'll alert and halt the test.
+         char  str[ 200 ] ; // ample
+         sprintf( str, "oMsg ('%s') string is too long (> %d) in messageReceived.", 
+                  oMsg, extraSpace ) ;
+         alert( str ) ;
+         score += fatalDiscrepancyFound ;
+         testing = false ;
+         return ERROR_OCCURRED_DURING_TEST ;
+      }
+      mostRecentResponseTime = RRTGetTime() ;
+      // Including time + extraSpace + "   <-- " + nl + nul.
+      char strWithTimeAndNl[ MAX_LOG_RECORD_SIZE + 6 + extraSpace + 7 + 1 + 1 ] ;
+      sprintf( strWithTimeAndNl, "%6i %-*s  <%c- %s\n", mostRecentResponseTime, 
+               extraSpace, oMsg, fromDebug ? 'D' : '-', rMsg );
       if ( pTb + strlen( strWithTimeAndNl ) < tlBuffer + tlBufferSize ) {
          strcpy( pTb, strWithTimeAndNl ) ;
          pTb += strlen( strWithTimeAndNl ) ;
@@ -2189,7 +2287,9 @@ int TransactionLog::messageReceived( char *rMsg, bool fromModel ) {
 // it is added here.
 //
 // The message is prepended with the test time (in ms) and a " --> " string
-// for visual distinction.
+// for visual distinction. There may be additional blanks inserted before the 
+// arrow, according on the value of extraSpaces, to accomodate outcome
+// indicators displayed on the response for the command.
 //
 // The input sMsg length should not exceed MAX_LOG_RECORD_SIZE characters.
 //
@@ -2202,9 +2302,12 @@ int TransactionLog::messageSent( char *sMsg ) {
          // We'll limit the log record size.
          sMsg[ MAX_LOG_RECORD_SIZE ] = '\0' ;
       }
-      // Including time + " --> " + nl + nul.
-      char strWithTimeAndNl[ MAX_LOG_RECORD_SIZE + 6 + 5 + 1 + 1 ] ;
-      sprintf( strWithTimeAndNl, "%6i --> %s\n", RRTGetTime(), sMsg ) ;
+      mostRecentResponseTime = 0 ;
+      mostRecentCommandTime = RRTGetTime() ;
+      // Including time + extraSpace + " --> " + nl + nul.
+      char strWithTimeAndNl[ MAX_LOG_RECORD_SIZE + 6 + extraSpace + 5 + 1 + 1 ] ;
+      sprintf( strWithTimeAndNl, "%6i %*s--> %s\n", mostRecentCommandTime, extraSpace, 
+               "", sMsg ) ;
       if ( pTb + strlen( strWithTimeAndNl ) < tlBuffer + tlBufferSize ) {
          strcpy( pTb, strWithTimeAndNl ) ;
          pTb += strlen( strWithTimeAndNl ) ;
@@ -2235,7 +2338,7 @@ int TransactionLog::messageSent( char *sMsg ) {
 // by the TRANSACTION_LOG_FILE_EXT constant defined by the test.
 //
 
-int TransactionLog::toFile( void ) {
+int TransactionLog::toFile( int testNumber, const char logFileHeader[] ) {
    const int eStrLen = 80 ;
    char      str[ eStrLen + 80 ] ; // ample
    char      eStr[ eStrLen ] ; // should be ample
@@ -2271,6 +2374,17 @@ int TransactionLog::toFile( void ) {
          } else {
             // Create (and open) the transaction log file in the log data
             // directory.
+            char testNumberString[ 10 ] ; // ample, usually 4 digits
+            sprintf( testNumberString, "%d", testNumber ) ; 
+            char thisTestNumber[ strlen( "Test Number " ) 
+                               + strlen( testNumberString ) + 1 ] ; // with nl at end
+            sprintf( thisTestNumber, "Test Number %s", testNumberString ) ;
+            char fileHeader[ strlen( logFileHeader ) 
+                           + strlen( thisTestNumber) ] ; // with nl at end
+            // Remove ctime's nl.
+            strcpy( fileHeader, logFileHeader ) ; 
+            fileHeader[ strlen( fileHeader ) - 1 ] = '\0' ;
+            sprintf( fileHeader, "%s,%s\n", fileHeader, thisTestNumber ) ;
             fp = fopen( tlFileSpec, "w" ) ; // write
             if ( !fp ) {
                // Open operation failed.
@@ -2279,9 +2393,8 @@ int TransactionLog::toFile( void ) {
                         tlFileSpec, eStr ) ;
                alert( str ) ;
                rc = LOG_FILE_ERROR_OCCURRED ;
-            } else if ( fwrite( RRTGetLogfileHeader(), 1,
-                                strlen( RRTGetLogfileHeader() ),
-                                fp ) != strlen( RRTGetLogfileHeader() ) ) {
+            } else if ( fwrite( fileHeader, 1, strlen( fileHeader ), fp ) 
+                        != strlen( fileHeader ) ) {
                // Write header failed on transaction log file.
                strerror_r( errno, eStr, eStrLen ) ;
                sprintf( str, "toFile method error occurred attempting to "
@@ -2297,8 +2410,8 @@ int TransactionLog::toFile( void ) {
                   moreTransactions = false ;
                }
                char *pB = tlBuffer ;
-               // Includes time + "   <-- " + nl + nul
-               char tempStr[ MAX_LOG_RECORD_SIZE + 6 + 7 + 1 + 1 ] ;
+               // Includes time + extraSpace + "   <-- " + nl + nul
+               char tempStr[ MAX_LOG_RECORD_SIZE + 6 + extraSpace + 7 + 1 + 1 ] ;
                int bytesWritten ;
                int tsSize = sizeof tempStr - 1 ;
                while ( moreTransactions ) {
