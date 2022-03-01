@@ -1577,7 +1577,7 @@ RequirementsTallyHandler::~RequirementsTallyHandler() {
 // This is the implementation of the tallyMet method of the
 // RequirementsTallyHandler class.
 //
-// This routine records when we actually execute the "shall" phrase of a
+// This routine records when we successfully execute the "shall" phrase of a
 // requirement.
 //
 
@@ -1643,7 +1643,8 @@ int RequirementsTallyHandler::toFile( unsigned int totalRequirementsCount ) {
          // Now write our requirements to the file.
          for ( int i = 0; rc == 0 && i < count; i++ ) {
             if ( talliesEncountered[ i ] || talliesMet[ i ] ) {
-               int bytesWritten = fprintf(fp, "%5i,%3i,%3i\n",
+//               int bytesWritten = fprintf(fp, "%5i,%3i,%3i\n",
+               int bytesWritten = fprintf(fp, "   %02X,%3i,%3i\n",
                                            i, talliesMet[ i ],
                                            talliesEncountered[ i ] ) ;
                if ( !bytesWritten ) {
@@ -1700,7 +1701,8 @@ int RequirementsTallyHandler::toLog( void ) {
             if ( talliesMet[ i ] && talliesEncountered[ i ] == talliesMet[ i ] ) {
                ++requirementsMet ;
             }
-            sprintf( str, "%5i (%3i/%3i)  ",
+//            sprintf( str, "%5i (%3i/%3i)  ",
+            sprintf( str, "   %02X (%3i/%3i)  ",
                      i, talliesMet[ i ], talliesEncountered[ i ] ) ;
             strcat( line, str ) ;
             if ( ++j >= 4 ) {
