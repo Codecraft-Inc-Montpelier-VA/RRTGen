@@ -125,7 +125,6 @@ void addAlertMessage( const char messageLetter ) {
    short i ;
    bool  messageFound = false ; // assume not included yet
    char  *pMessage = getAlertMessagePtr( messageLetter ) ;
-
    if ( alertMessageIndex < MAX_ALERT_MESSAGES ) {
       for ( i = 0; i < alertMessageIndex; i++ ) {
          if ( alertMessages[ i ] == pMessage ) {
@@ -182,6 +181,8 @@ void addAlertMessage( const char messageLetter ) {
          alertIssued *= 67 ;
       } else if ( pMessage == alertT && alertIssued % 71 ) {
          alertIssued *= 71 ;
+      } else if ( pMessage == alertU && alertIssued % 73 ) {
+         alertIssued *= 73 ;
       }
 #if 0
      //     :      :     :     :   `
@@ -565,6 +566,10 @@ char *getAlertMessagePtr( const char messageLetter ) {
 
       case 'T':
          pStr = (char *)alertT ;
+         break ;
+
+      case 'U':
+         pStr = (char *)alertU ;
          break ;
 
       default:
@@ -1089,6 +1094,8 @@ void outputAlertMessages( void ) {
             c = 'S' ;
          } else if ( alertMessages[i] == alertT ) {
             c = 'T' ;
+         } else if ( alertMessages[i] == alertU ) {
+            c = 'U' ;
          } else {
             c = 'Z';
          }
