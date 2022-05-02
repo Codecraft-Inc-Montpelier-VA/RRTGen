@@ -87,6 +87,7 @@ FSM               *broadcast = 0 ;
 bool              configuring ;         // test is in configuration phase
 unsigned int      mostRecentResponseTime = 0 ;
 unsigned int      mostRecentCommandTime = 0 ;
+bool              stopping ;            // test is in stopping phase
 unsigned int      TOTAL_REQ_COUNT = 0 ; // updated in Gen_Commands_Model::AVTModel_1200
 Fifo              theEventQ( "theEventQ" ) ;
 Fifo              theEventSelfDirectedQ( "theEventSelfDirectedQ" ) ;
